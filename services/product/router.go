@@ -6,6 +6,7 @@ import (
 	"basic_go_backend/utils"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -25,6 +26,7 @@ func NewHandler(user types.UserStore, store types.ProductStore) *Handler {
 
 func (h *Handler) RegisterProductRoutes(router *mux.Router) {
 	router.HandleFunc("/products", h.getProductsHandler).Methods(http.MethodGet)
+	router.HandleFunc("/events", h.eventsHandler).Methods(http.MethodGet)
 	router.HandleFunc("/products/{productID}", h.getProductHandler).Methods(http.MethodGet)
 	router.HandleFunc("/products", auth.WithJWTAuth(h.createProductHandler, h.userStore)).Methods(http.MethodPost)
 }
@@ -39,6 +41,7 @@ func (h *Handler) getProductsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) getProductHandler(w http.ResponseWriter, r *http.Request) {
+
 }
 
 func (h *Handler) createProductHandler(w http.ResponseWriter, r *http.Request) {
@@ -60,4 +63,16 @@ func (h *Handler) createProductHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	utils.WriteJson(w, http.StatusCreated, product)
+}
+func (h *Handler) eventsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "text/event-stream")
+	// w.Header().Add("cache-control", "no-cache")
+	tokens := []string{"My", "Name", "Is", "Jeno", "And", "I", "Am", "A", "Developer"}
+	for _, token := range tokens {
+		content := fmt.Sprintf("data: %s\n\n", token)
+		w.Write([]byte(content))
+		w.(http.Flusher).Flush()
+		time.Sleep(1 * time.Second)
+	}
+
 }
