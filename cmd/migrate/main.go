@@ -40,7 +40,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance(
+	migration, err := migrate.NewWithDatabaseInstance(
 		"file://cmd/migrate/migrations",
 		"mysql",
 		driver,
@@ -49,27 +49,23 @@ func main() {
 		log.Fatal(err)
 	}
 
-	v, d, _ := m.Version()
+	v, d, _ := migration.Version()
 	log.Printf("Version: %d, dirty: %v", v, d)
 
 	cmd := os.Args[len(os.Args)-1]
-	// if cmd == "up" {
-	// 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-	// 		log.Fatal(err)
-	// 	}
-	// }
-	if err := m.Up(); err != nil {
-		if err == migrate.ErrNoChange {
-			log.Println("No migrations to apply.")
-		} else {
+
+	if cmd == "up" {
+		if err := migration.Up(); err != nil && err != migrate.ErrNoChange {
 			log.Fatalf("Migration failed: %v", err)
 		}
-	}
-
-	if cmd == "down" {
-		if err := m.Down(); err != nil && err != migrate.ErrNoChange {
-			log.Fatal(err)
+		log.Println("Migration applied successfully.")
+	} else if cmd == "down" {
+		if err := migration.Down(); err != nil && err != migrate.ErrNoChange {
+			log.Fatalf("Migration failed: %v", err)
 		}
+		log.Println("Migration rolled back successfully.")
+	} else {
+		log.Fatalf("Unknown command: %s", cmd)
 	}
 
 }
